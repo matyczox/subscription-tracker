@@ -1,0 +1,8 @@
+/* Cleaned to prevent conflicts. All styles are in App.css */
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
