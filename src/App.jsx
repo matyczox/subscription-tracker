@@ -1,80 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import { useSubscriptions } from './context/SubscriptionContext';
+import Home from './pages/Home';
+import Settings from './pages/Settings';
 import './App.css';
-import Dashboard from './components/Dashboard';
-import SubscriptionList from './components/SubscriptionList';
-import SubscriptionForm from './components/SubscriptionForm';
-import { getSubscriptions, saveSubscriptions, generateId } from './utils/storage';
+import { Settings as SettingsIcon, Home as HomeIcon } from 'lucide-react';
 
 function App() {
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingSub, setEditingSub] = useState(null);
+  const { isLoaded, settings } = useSubscriptions();
 
-  useEffect(() => {
-    setSubscriptions(getSubscriptions());
-  }, []);
-
-  const handleSave = (subData) => {
-    let updatedSubs;
-    if (editingSub) {
-      updatedSubs = subscriptions.map((sub) =>
-        sub.id === editingSub.id ? { ...subData, id: editingSub.id } : sub
-      );
-    } else {
-      updatedSubs = [...subscriptions, { ...subData, id: generateId() }];
-    }
-    setSubscriptions(updatedSubs);
-    saveSubscriptions(updatedSubs);
-    setIsFormOpen(false);
-    setEditingSub(null);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę subskrypcję?')) {
-      const updatedSubs = subscriptions.filter((sub) => sub.id !== id);
-      setSubscriptions(updatedSubs);
-      saveSubscriptions(updatedSubs);
-    }
-  };
-
-  const openEdit = (sub) => {
-    setEditingSub(sub);
-    setIsFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setEditingSub(null);
-  };
+  if (!isLoaded) return <div className="loader">Ładowanie...</div>;
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${settings.darkTheme ? 'dark-theme' : 'light-theme'}`}>
       <header className="app-header">
-        <div className="logo-container">
+        <Link to="/" className="logo-container" style={{ textDecoration: 'none' }}>
           <div className="logo-icon">💳</div>
           <h1>SubTrack</h1>
+        </Link>
+        <div className="nav-links">
+          <Link to="/" className="icon-btn" title="Strona główna"><HomeIcon size={20} /></Link>
+          <Link to="/settings" className="icon-btn" title="Ustawienia"><SettingsIcon size={20} /></Link>
         </div>
-        <button className="primary-btn pulse-anim" onClick={() => setIsFormOpen(true)}>
-          + Dodaj Subskrypcję
-        </button>
       </header>
 
       <main className="app-main">
-        <Dashboard subscriptions={subscriptions} />
-        <SubscriptionList
-          subscriptions={subscriptions}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-        />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
       </main>
-
-      {isFormOpen && (
-        <SubscriptionForm
-          onClose={closeForm}
-          onSave={handleSave}
-          initialData={editingSub}
-        />
-      )}
     </div>
   );
 }
