@@ -73,6 +73,7 @@ h1 {
   font-size: 2.2rem;
   background: var(--accent-gradient);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
 }
@@ -264,6 +265,31 @@ button {
 .cycle-weekly {
   background: rgba(255, 165, 2, 0.15);
   color: #ffa502;
+}
+
+.category-entertainment {
+  background: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+}
+
+.category-software {
+  background: rgba(30, 144, 255, 0.15);
+  color: #1e90ff;
+}
+
+.category-cloud {
+  background: rgba(0, 210, 211, 0.15);
+  color: #00d2d1;
+}
+
+.category-gym {
+  background: rgba(46, 213, 115, 0.15);
+  color: #2ed573;
+}
+
+.category-other {
+  background: rgba(155, 161, 176, 0.15);
+  color: #9ba1b0;
 }
 
 .sub-category {

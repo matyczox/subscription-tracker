@@ -34,7 +34,17 @@ const SubscriptionList = ({ subscriptions, onEdit, onDelete }) => {
                     {sub.billingCycle === 'monthly' ? 'Miesięcznie' : sub.billingCycle === 'yearly' ? 'Rocznie' : 'Tygodniowo'}
                   </span>
                 </td>
-                <td className="sub-category">{sub.category}</td>
+                <td className="sub-category">
+                  <span className={`badge category-${sub.category}`}>
+                    {{
+                      entertainment: 'Rozrywka',
+                      software: 'Oprogramowanie',
+                      cloud: 'Chmura',
+                      gym: 'Sport',
+                      other: 'Inne'
+                    }[sub.category] || sub.category}
+                  </span>
+                </td>
                 <td className="sub-actions">
                   <button onClick={() => onEdit(sub)} className="icon-btn edit-btn" title="Edytuj">✏️</button>
                   <button onClick={() => onDelete(sub.id)} className="icon-btn delete-btn" title="Usuń">🗑️</button>
