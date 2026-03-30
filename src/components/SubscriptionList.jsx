@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
 import { formatCurrency, determineServiceLogo, getNextPaymentDate, convertCurrency } from '../utils/storage';
-import { Search, Filter, ArrowUpDown, Trash2, Edit2, Play, Pause } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, Trash2, Edit2, Play, Pause, LayoutGrid, List, CheckCircle2, CircleOff, Monitor, Package, Cloud, Activity, GraduationCap, Heart, Shield, MoreHorizontal } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import EmptyState from './EmptyState';
 import { format } from 'date-fns';
@@ -12,8 +12,20 @@ const SubscriptionList = ({ onEdit }) => {
   const { subscriptions, deleteSubscription, toggleStatus, settings, exchangeRates } = useSubscriptions();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('name'); // name, cost, nextPayment
+  const [sortBy, setSortBy] = useState('name'); // name, cost, costAsc, nextPayment
+  const [filterStatus, setFilterStatus] = useState('all'); // all, active, paused
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, name: '' });
+  
+  const categoryIcons = {
+    entertainment: <Monitor size={18} />,
+    software: <Package size={18} />,
+    cloud: <Cloud size={18} />,
+    gym: <Activity size={18} />,
+    education: <GraduationCap size={18} />,
+    health: <Heart size={18} />,
+    insurance: <Shield size={18} />,
+    other: <MoreHorizontal size={18} />
+  };
 
   const categories = ['all', ...Array.from(new Set(subscriptions.map(s => s.category)))];
 
@@ -22,7 +34,10 @@ const SubscriptionList = ({ onEdit }) => {
       .filter((sub) => {
         const matchesSearch = sub.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = filterCategory === 'all' || sub.category === filterCategory;
-        return matchesSearch && matchesCategory;
+        const matchesStatus = filterStatus === 'all' || 
+                             (filterStatus === 'active' && sub.status !== 'paused') ||
+                             (filterStatus === 'paused' && sub.status === 'paused');
+        return matchesSearch && matchesCategory && matchesStatus;
       })
       .map(sub => {
         const nextDate = getNextPaymentDate(sub.startDate, sub.billingCycle);
@@ -35,10 +50,15 @@ const SubscriptionList = ({ onEdit }) => {
           const costB = convertCurrency(parseFloat(b.cost), b.currency || 'PLN', settings.currency, exchangeRates);
           return costB - costA;
         }
+        if (sortBy === 'costAsc') {
+          const costA = convertCurrency(parseFloat(a.cost), a.currency || 'PLN', settings.currency, exchangeRates);
+          const costB = convertCurrency(parseFloat(b.cost), b.currency || 'PLN', settings.currency, exchangeRates);
+          return costA - costB;
+        }
         if (sortBy === 'nextPayment') return a.nextDate - b.nextDate;
         return 0;
       });
-  }, [subscriptions, searchTerm, filterCategory, sortBy]);
+  }, [subscriptions, searchTerm, filterCategory, filterStatus, sortBy, settings.currency, exchangeRates]);
 
   if (subscriptions.length === 0) return <EmptyState />;
 
@@ -82,7 +102,21 @@ const SubscriptionList = ({ onEdit }) => {
             >
               <option value="name">Od A do Z</option>
               <option value="cost">Od najdroższej</option>
+              <option value="costAsc">Od najtańszej</option>
               <option value="nextPayment">Najbliższa płatność</option>
+            </select>
+          </div>
+
+          <div className="status-filter-box" style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-color)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
+            <CheckCircle2 size={18} color="var(--text-secondary)" style={{ marginRight: '8px' }} />
+            <select 
+              value={filterStatus} 
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }}
+            >
+              <option value="all">Wszystkie statusy</option>
+              <option value="active">Tylko aktywne</option>
+              <option value="paused">Tylko wstrzymane</option>
             </select>
           </div>
         </div>
@@ -122,9 +156,10 @@ const SubscriptionList = ({ onEdit }) => {
                   </div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{sub.name}</h3>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      {CATEGORY_LABELS[sub.category] || sub.category}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center' }}>{categoryIcons[sub.category] || categoryIcons.other}</span>
+                      <span>{CATEGORY_LABELS[sub.category] || sub.category}</span>
+                    </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
@@ -135,6 +170,12 @@ const SubscriptionList = ({ onEdit }) => {
                   <button onClick={() => setDeleteModal({ isOpen: true, id: sub.id, name: sub.name })} className="icon-btn" title="Usuń" style={{ color: 'var(--danger-color)' }}><Trash2 size={16} /></button>
                 </div>
               </div>
+
+              {sub.notes && (
+                <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', borderLeft: '2px solid var(--accent-color)' }}>
+                  {sub.notes}
+                </div>
+              )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
                 <div>

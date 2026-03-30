@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
-import { exportData } from '../utils/storage';
-import { Download, Save } from 'lucide-react';
+import { exportData, importData } from '../utils/storage';
+import { Download, Save, Upload } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const Settings = () => {
-  const { subscriptions, settings, updateSettings } = useSubscriptions();
+  const { subscriptions, settings, updateSettings, importSubscriptions } = useSubscriptions();
   const [formData, setFormData] = useState(settings);
 
   const handleChange = (e) => {
@@ -18,8 +18,28 @@ const Settings = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    updateSettings({ ...formData, budget: Number(formData.budget) });
+    const budgetValue = Number(formData.budget);
+    if (budgetValue <= 0) {
+      toast.error('Budżet musi być większy od zera');
+      return;
+    }
+    updateSettings({ ...formData, budget: budgetValue });
     toast.success('Zapisano ustawienia');
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      const data = await importData(file);
+      if (window.confirm(`Czy na pewno chcesz zaimportować ${data.length} subskrypcji? Obecne dane zostaną nadpisane.`)) {
+        importSubscriptions(data);
+      }
+    } catch (err) {
+      toast.error(err.message);
+    }
+    e.target.value = ''; // Reset input
   };
 
   const handleExport = () => {
@@ -51,6 +71,7 @@ const Settings = () => {
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
             <option value="GBP">GBP (£)</option>
+            <option value="CHF">CHF (fr)</option>
           </select>
         </div>
 
@@ -80,9 +101,15 @@ const Settings = () => {
         <p style={{ marginBottom: '15px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           Pobierz wszystkie swoje subskrypcje w formacie JSON jako kopię zapasową.
         </p>
-        <button type="button" onClick={handleExport} className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Download size={18} /> Eksportuj JSON
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button type="button" onClick={handleExport} className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Download size={18} /> Eksportuj JSON
+          </button>
+          <label className="secondary-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <Upload size={18} /> Importuj JSON
+            <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+          </label>
+        </div>
       </div>
     </div>
   );

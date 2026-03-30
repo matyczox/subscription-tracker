@@ -22,6 +22,7 @@ export const CATEGORY_LABELS = {
 
 export const BILLING_CYCLES = [
   { value: 'monthly', label: 'Miesięcznie', days: 30 },
+  { value: 'quarterly', label: 'Kwartalnie', days: 91 },
   { value: 'yearly', label: 'Rocznie', days: 365 },
   { value: 'weekly', label: 'Tygodniowo', days: 7 }
 ];

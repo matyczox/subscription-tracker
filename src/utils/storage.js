@@ -54,6 +54,8 @@ export const calculateMonthlyCost = (subscriptions, baseCurrency = 'PLN', exchan
       let monthlyCost = parseFloat(sub.cost);
       if (sub.billingCycle === 'yearly') {
         monthlyCost = monthlyCost / 12;
+      } else if (sub.billingCycle === 'quarterly') {
+        monthlyCost = monthlyCost / 3;
       } else if (sub.billingCycle === 'weekly') {
         monthlyCost = monthlyCost * 4.33;
       }
@@ -84,6 +86,8 @@ export const getNextPaymentDate = (startDate, billingCycle) => {
   while (isBefore(next, now) || isSameDay(next, now)) {
     if (billingCycle === 'monthly') {
       next = addMonths(next, 1);
+    } else if (billingCycle === 'quarterly') {
+      next = addMonths(next, 3);
     } else if (billingCycle === 'yearly') {
       next = addYears(next, 1);
     } else if (billingCycle === 'weekly') {
@@ -124,6 +128,7 @@ const activeCostInMonth = (subscriptions, targetMonth, baseCurrency = 'PLN', exc
     .reduce((total, sub) => {
       let monthlyCost = parseFloat(sub.cost);
       if (sub.billingCycle === 'yearly') monthlyCost /= 12;
+      if (sub.billingCycle === 'quarterly') monthlyCost /= 3;
       if (sub.billingCycle === 'weekly') monthlyCost *= 4.33;
       
       const subCurrency = sub.currency || 'PLN';
@@ -141,6 +146,26 @@ export const exportData = (data) => {
   a.download = `subtrack_backup_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+export const importData = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (!Array.isArray(parsed)) {
+          reject(new Error('Nieprawidłowy format pliku – oczekiwana tablica subskrypcji'));
+          return;
+        }
+        resolve(parsed);
+      } catch (err) {
+        reject(new Error('Błąd parsowania JSON: ' + err.message));
+      }
+    };
+    reader.onerror = () => reject(new Error('Błąd odczytu pliku'));
+    reader.readAsText(file);
+  });
 };
 
 export const determineServiceLogo = (name) => {

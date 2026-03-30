@@ -11,7 +11,8 @@ const SubscriptionForm = ({ onClose, onSave, initialData }) => {
     currency: settings?.currency || 'PLN',
     billingCycle: 'monthly',
     category: 'entertainment',
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: new Date().toISOString().split('T')[0],
+    notes: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -126,6 +127,18 @@ const SubscriptionForm = ({ onClose, onSave, initialData }) => {
               value={formData.startDate} 
               onChange={handleChange}
             />
+          </div>
+
+          <div className="form-group">
+            <label>Notatki (opcjonalnie)</label>
+            <textarea 
+              name="notes" 
+              value={formData.notes} 
+              onChange={handleChange} 
+              placeholder="np. plan rodzinny, dzielone z bratem"
+              rows="2"
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'var(--surface-color)', border: '1px solid var(--surface-border)', color: 'var(--text-primary)', resize: 'vertical' }}
+            ></textarea>
           </div>
 
           <div className="form-actions" style={{ marginTop: '20px' }}>

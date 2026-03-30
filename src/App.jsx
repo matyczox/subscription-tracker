@@ -3,8 +3,9 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { useSubscriptions } from './context/SubscriptionContext';
 import Home from './pages/Home';
 import Settings from './pages/Settings';
+import Stats from './pages/Stats';
 import './App.css';
-import { Settings as SettingsIcon, Home as HomeIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Home as HomeIcon, BarChart3 } from 'lucide-react';
 
 function App() {
   const { isLoaded, settings } = useSubscriptions();
@@ -30,6 +31,7 @@ function App() {
         </Link>
         <div className="nav-links">
           <Link to="/" className="icon-btn" title="Strona główna"><HomeIcon size={20} /></Link>
+          <Link to="/stats" className="icon-btn" title="Statystyki"><BarChart3 size={20} /></Link>
           <Link to="/settings" className="icon-btn" title="Ustawienia"><SettingsIcon size={20} /></Link>
         </div>
       </header>
@@ -37,6 +39,7 @@ function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/stats" element={<Stats />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

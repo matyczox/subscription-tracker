@@ -73,6 +73,17 @@ export const SubscriptionProvider = ({ children }) => {
     toast.success('Zmieniono status subskrypcji');
   };
 
+  const importSubscriptions = (importedSubs) => {
+    // Basic validation of imported data before saving
+    const validSubs = importedSubs.map(sub => ({
+      ...sub,
+      id: sub.id || generateId(),
+      status: sub.status || 'active'
+    }));
+    updateSubscriptions(validSubs);
+    toast.success(`Zaimportowano ${validSubs.length} subskrypcji!`);
+  };
+
   return (
     <SubscriptionContext.Provider value={{
       subscriptions,
@@ -83,6 +94,7 @@ export const SubscriptionProvider = ({ children }) => {
       editSubscription,
       deleteSubscription,
       toggleStatus,
+      importSubscriptions,
       isLoaded
     }}>
       {children}
