@@ -1,16 +1,16 @@
 import React from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { calculateMonthlyCost, formatCurrency, getNextPaymentDate } from '../utils/storage';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { calculateMonthlyCost, formatCurrency, getNextPaymentDate, convertCurrency, generateHistoryData } from '../utils/storage';
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '../constants';
 import { format, differenceInDays } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { AlertCircle, Calendar, CreditCard, Wallet } from 'lucide-react';
 
 const Dashboard = () => {
-  const { subscriptions, settings } = useSubscriptions();
+  const { subscriptions, settings, exchangeRates } = useSubscriptions();
   
-  const totalMonthly = calculateMonthlyCost(subscriptions);
+  const totalMonthly = calculateMonthlyCost(subscriptions, settings.currency, exchangeRates);
   const totalYearly = totalMonthly * 12;
   const activeCount = subscriptions.filter(s => s.status !== 'paused').length;
 
@@ -25,6 +25,9 @@ const Dashboard = () => {
       let monthlyCost = parseFloat(sub.cost);
       if (sub.billingCycle === 'yearly') monthlyCost /= 12;
       if (sub.billingCycle === 'weekly') monthlyCost *= 4.33;
+      
+      const subCurrency = sub.currency || 'PLN';
+      monthlyCost = convertCurrency(monthlyCost, subCurrency, settings.currency, exchangeRates);
       
       acc[sub.category] = (acc[sub.category] || 0) + monthlyCost;
       return acc;
@@ -48,6 +51,8 @@ const Dashboard = () => {
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const upcomingPayments = activeSubsWithDates.filter(s => s.daysLeft <= 7 && s.daysLeft >= 0);
+
+  const historyData = generateHistoryData(subscriptions, 6, settings.currency, exchangeRates);
 
   return (
     <section className="dashboard glass-panel">
@@ -117,36 +122,54 @@ const Dashboard = () => {
       </div>
       
       {chartData.length > 0 && (
-        <div className="chart-container" style={{ marginTop: '30px', height: '300px' }}>
-          <h3 style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>Wydatki według kategorii (miesięcznie)</h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-                stroke="none"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value) => formatCurrency(value, settings.currency)}
-                contentStyle={{ backgroundColor: '#170d24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Legend 
-                verticalAlign="bottom" 
-                height={36}
-                wrapperStyle={{ color: 'var(--text-primary)' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="chart-container" style={{ marginTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+          <div style={{ height: '300px' }}>
+            <h3 style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>Wydatki według kategorii</h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => formatCurrency(value, settings.currency)}
+                  contentStyle={{ backgroundColor: 'var(--bg-color)', border: '1px solid var(--surface-border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                  itemStyle={{ color: 'var(--text-primary)' }}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  wrapperStyle={{ color: 'var(--text-primary)' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ height: '300px' }}>
+            <h3 style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>Trend wydatków (6 miesięcy)</h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={historyData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <Line type="monotone" dataKey="uv" name="Koszt" stroke="var(--accent-color)" strokeWidth={3} dot={{ r: 4, fill: "var(--accent-color)" }} activeDot={{ r: 6 }} />
+                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" opacity={0.1} />
+                <XAxis dataKey="name" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} />
+                <YAxis stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)' }} tickFormatter={(value) => value.toFixed(0)} />
+                <Tooltip 
+                  formatter={(value) => formatCurrency(value, settings.currency)}
+                  contentStyle={{ backgroundColor: 'var(--bg-color)', border: '1px solid var(--surface-border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                  itemStyle={{ color: 'var(--text-primary)' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
     </section>

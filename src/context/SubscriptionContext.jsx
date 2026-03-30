@@ -8,11 +8,21 @@ export const SubscriptionProvider = ({ children }) => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [settings, setSettings] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState({});
 
   useEffect(() => {
     setSubscriptions(getSubscriptions());
     setSettings(getSettings());
     setIsLoaded(true);
+
+    fetch('https://api.frankfurter.app/latest')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.rates) {
+          setExchangeRates({ ...data.rates, [data.base]: 1 });
+        }
+      })
+      .catch(err => console.error("Błąd pobierania kursów:", err));
   }, []);
 
   const updateSubscriptions = (newSubs) => {
@@ -67,6 +77,7 @@ export const SubscriptionProvider = ({ children }) => {
     <SubscriptionContext.Provider value={{
       subscriptions,
       settings,
+      exchangeRates,
       updateSettings,
       addSubscription,
       editSubscription,

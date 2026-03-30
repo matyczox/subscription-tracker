@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSubscriptions } from '../context/SubscriptionContext';
-import { formatCurrency, determineServiceLogo, getNextPaymentDate } from '../utils/storage';
+import { formatCurrency, determineServiceLogo, getNextPaymentDate, convertCurrency } from '../utils/storage';
 import { Search, Filter, ArrowUpDown, Trash2, Edit2, Play, Pause } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import EmptyState from './EmptyState';
@@ -9,7 +9,7 @@ import { pl } from 'date-fns/locale';
 import { CATEGORY_LABELS, BILLING_CYCLES } from '../constants';
 
 const SubscriptionList = ({ onEdit }) => {
-  const { subscriptions, deleteSubscription, toggleStatus, settings } = useSubscriptions();
+  const { subscriptions, deleteSubscription, toggleStatus, settings, exchangeRates } = useSubscriptions();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name'); // name, cost, nextPayment
@@ -30,7 +30,11 @@ const SubscriptionList = ({ onEdit }) => {
       })
       .sort((a, b) => {
         if (sortBy === 'name') return a.name.localeCompare(b.name);
-        if (sortBy === 'cost') return parseFloat(b.cost) - parseFloat(a.cost);
+        if (sortBy === 'cost') {
+          const costA = convertCurrency(parseFloat(a.cost), a.currency || 'PLN', settings.currency, exchangeRates);
+          const costB = convertCurrency(parseFloat(b.cost), b.currency || 'PLN', settings.currency, exchangeRates);
+          return costB - costA;
+        }
         if (sortBy === 'nextPayment') return a.nextDate - b.nextDate;
         return 0;
       });
@@ -44,41 +48,41 @@ const SubscriptionList = ({ onEdit }) => {
         <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Twoje Subskrypcje ({subscriptions.length})</h2>
         
         <div className="toolbar-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <div className="search-box glass-input" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="search-box glass-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-color)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
             <Search size={18} color="var(--text-secondary)" style={{ marginRight: '8px' }} />
             <input 
               type="text" 
               placeholder="Szukaj..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }}
             />
           </div>
 
-          <div className="filter-box" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="filter-box" style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-color)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
             <Filter size={18} color="var(--text-secondary)" style={{ marginRight: '8px' }} />
             <select 
               value={filterCategory} 
               onChange={(e) => setFilterCategory(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }}
             >
-              <option value="all" style={{ color: '#000' }}>Wszystkie kategorie</option>
+              <option value="all">Wszystkie kategorie</option>
               {categories.filter(c => c !== 'all').map(c => (
-                <option key={c} value={c} style={{ color: '#000' }}>{CATEGORY_LABELS[c] || c}</option>
+                <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>
               ))}
             </select>
           </div>
 
-          <div className="sort-box" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="sort-box" style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-color)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
             <ArrowUpDown size={18} color="var(--text-secondary)" style={{ marginRight: '8px' }} />
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none' }}
             >
-              <option value="name" style={{ color: '#000' }}>Od A do Z</option>
-              <option value="cost" style={{ color: '#000' }}>Od najdroższej</option>
-              <option value="nextPayment" style={{ color: '#000' }}>Najbliższa płatność</option>
+              <option value="name">Od A do Z</option>
+              <option value="cost">Od najdroższej</option>
+              <option value="nextPayment">Najbliższa płatność</option>
             </select>
           </div>
         </div>
@@ -103,12 +107,19 @@ const SubscriptionList = ({ onEdit }) => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   {logoUri ? (
-                    <img src={logoUri} alt={sub.name} style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', padding: '4px', borderRadius: '8px' }} />
-                  ) : (
-                    <div style={{ width: '40px', height: '40px', background: 'var(--accent-gradient)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                      {sub.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                    <img 
+                      src={logoUri} 
+                      alt={sub.name} 
+                      style={{ width: '40px', height: '40px', objectFit: 'contain', background: '#fff', padding: '4px', borderRadius: '8px' }} 
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div style={{ display: logoUri ? 'none' : 'flex', width: '40px', height: '40px', background: 'var(--accent-gradient)', borderRadius: '8px', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    {sub.name.charAt(0).toUpperCase()}
+                  </div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{sub.name}</h3>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -128,7 +139,18 @@ const SubscriptionList = ({ onEdit }) => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
                 <div>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Koszt ({cycleLabel})</p>
-                  <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700' }}>{formatCurrency(sub.cost, settings.currency)}</p>
+                  <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '700' }}>
+                    {(sub.currency || 'PLN') !== settings.currency ? (
+                      <span style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span>{formatCurrency(sub.cost, sub.currency || 'PLN')}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'normal', lineHeight: '1.2' }}>
+                          ok. {formatCurrency(convertCurrency(parseFloat(sub.cost), sub.currency || 'PLN', settings.currency, exchangeRates), settings.currency)}
+                        </span>
+                      </span>
+                    ) : (
+                      formatCurrency(sub.cost, settings.currency)
+                    )}
+                  </p>
                 </div>
                 {sub.status !== 'paused' && (
                   <div style={{ textAlign: 'right' }}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { useSubscriptions } from './context/SubscriptionContext';
 import Home from './pages/Home';
@@ -9,10 +9,20 @@ import { Settings as SettingsIcon, Home as HomeIcon } from 'lucide-react';
 function App() {
   const { isLoaded, settings } = useSubscriptions();
 
+  useEffect(() => {
+    if (settings.darkTheme) {
+      document.body.classList.add('dark-theme');
+      document.body.classList.remove('light-theme');
+    } else {
+      document.body.classList.add('light-theme');
+      document.body.classList.remove('dark-theme');
+    }
+  }, [settings.darkTheme]);
+
   if (!isLoaded) return <div className="loader">Ładowanie...</div>;
 
   return (
-    <div className={`app-container ${settings.darkTheme ? 'dark-theme' : 'light-theme'}`}>
+    <div className="app-container">
       <header className="app-header">
         <Link to="/" className="logo-container" style={{ textDecoration: 'none' }}>
           <div className="logo-icon">💳</div>

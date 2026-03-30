@@ -8,6 +8,7 @@ const SubscriptionForm = ({ onClose, onSave, initialData }) => {
   const [formData, setFormData] = useState({
     name: '',
     cost: '',
+    currency: settings?.currency || 'PLN',
     billingCycle: 'monthly',
     category: 'entertainment',
     startDate: new Date().toISOString().split('T')[0]
@@ -78,16 +79,26 @@ const SubscriptionForm = ({ onClose, onSave, initialData }) => {
           </div>
 
           <div className="form-group">
-            <label>Koszt ({settings?.currency || 'PLN'})</label>
-            <input 
-              type="number" 
-              step="0.01" 
-              name="cost" 
-              value={formData.cost} 
-              onChange={handleChange} 
-              placeholder="np. 49.99"
-              className={errors.cost ? 'error-input' : ''}
-            />
+            <label>Koszt</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="number" 
+                step="0.01" 
+                name="cost" 
+                value={formData.cost} 
+                onChange={handleChange} 
+                placeholder="np. 49.99"
+                className={errors.cost ? 'error-input' : ''}
+                style={{ flex: 1 }}
+              />
+              <select name="currency" value={formData.currency} onChange={handleChange} style={{ width: '100px' }}>
+                <option value="PLN">PLN</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="CHF">CHF</option>
+              </select>
+            </div>
             {errors.cost && <span className="error-msg" style={{ color: 'var(--danger-color)', fontSize: '0.8rem' }}>{errors.cost}</span>}
           </div>
 
