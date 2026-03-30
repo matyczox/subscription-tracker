@@ -316,6 +316,27 @@ option {
   color: var(--text-primary);
 }
 
+/* Billing Timeline */
+.timeline-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.timeline-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.timeline-scroll::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 10px;
+}
+
+.timeline-card:hover {
+  transform: translateY(-4px);
+  background: rgba(123, 66, 246, 0.08) !important;
+  border-color: rgba(123, 66, 246, 0.4) !important;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -336,6 +357,9 @@ option {
     align-items: center;
   }
   .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  .financial-insights {
     grid-template-columns: 1fr;
   }
 }

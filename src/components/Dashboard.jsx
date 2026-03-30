@@ -5,7 +5,9 @@ import { calculateMonthlyCost, formatCurrency, getNextPaymentDate, convertCurren
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '../constants';
 import { format, differenceInDays } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { AlertCircle, Calendar, CreditCard, Wallet } from 'lucide-react';
+import { AlertCircle, Calendar, CreditCard, Wallet, Activity } from 'lucide-react';
+import BillingTimeline from './BillingTimeline';
+import FinancialInsights from './FinancialInsights';
 
 const Dashboard = () => {
   const { subscriptions, settings, exchangeRates } = useSubscriptions();
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const budget = settings.budget || 500;
   const budgetPercentage = Math.min((totalMonthly / budget) * 100, 100);
   const isOverBudget = totalMonthly > budget;
+  const dailyBurn = totalMonthly / 30;
 
   // Pie chart data
   const categoryData = subscriptions
@@ -89,6 +92,12 @@ const Dashboard = () => {
           />
         </div>
         {isOverBudget && <p style={{ color: 'var(--danger-color)', fontSize: '0.85rem', marginTop: '6px' }}>Przekroczyłeś limit budżetu na ten miesiąc!</p>}
+        {!isOverBudget && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+            <Activity size={14} color="var(--success-color)" />
+            <span>Średni koszt dzienny: <strong>{formatCurrency(dailyBurn, settings.currency)}</strong></span>
+          </div>
+        )}
       </div>
 
       <div className="summary-cards">
@@ -172,6 +181,9 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      <BillingTimeline />
+      <FinancialInsights />
     </section>
   );
 };
