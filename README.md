@@ -41,8 +41,26 @@ npm run dev
 
 Otwórz w przeglądarce adres `http://localhost:5173/`, aby zobaczyć aplikację w akcji.
 
+## 🧪 Testy
+
+Projekt posiada skonfigurowane środowisko testowe **Vitest** oraz 5 przechodzących testów jednostkowych badających główną logikę przechowywania i transformacji danych.
+
+```bash
+npm run test
+```
+
+*Status testów*: ✅ Wszystkie 5 testów przechodzi pomyślnie.
+
 ---
 
 ## 📝 Licencja
 
-Projekt edukacyjny stworzony przy wsparciu AI.
+Projekt edukacyjny.
+
+---
+
+## 🤖 Wkład AI (AI Contribution)
+
+Zgodnie z wymogami projektu, aplikacja została stworzona z użyciem narzędzi opartych na Sztucznej Inteligencji (np. Gemini/Cursor).
+- **Projekty samodzielne**: Wstępny pomysł na działanie aplikacji, logika biznesowa przeliczania częstotliwości płatności, wytyczne architektury React + Vite.
+- **Wygenerowane z asystą AI**: Struktura wizualna (Glassmorphism), konfiguracja komponentów Recharts (wykresy kołowe / osie czasu), dodane testy jednostkowe Vitest. Z asystentem rozwiązywaliśmy również problemy z formatami LocalStorage na wielu widokach oraz konwersją walut. Cały proces obejmował współpracę nad optymalizacją i dostarczaniem docelowej dokumentacji (wytyczne).
