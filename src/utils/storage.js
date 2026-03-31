@@ -1,5 +1,9 @@
 import { addDays, addMonths, addYears, isAfter, isBefore, isSameDay } from 'date-fns';
 
+/**
+ * Retrieves subscriptions from localStorage
+ * @returns {Array} List of subscriptions
+ */
 export const getSubscriptions = () => {
   try {
     const data = localStorage.getItem('subtrack_subscriptions');
@@ -10,6 +14,10 @@ export const getSubscriptions = () => {
   }
 };
 
+/**
+ * Saves subscriptions to localStorage
+ * @param {Array} subscriptions List of subscriptions to save
+ */
 export const saveSubscriptions = (subscriptions) => {
   try {
     localStorage.setItem('subtrack_subscriptions', JSON.stringify(subscriptions));
@@ -33,6 +41,10 @@ export const saveSettings = (settings) => {
   } catch (e) { }
 };
 
+/**
+ * Generates a unique ID
+ * @returns {string} Unique identifier
+ */
 export const generateId = () => {
   return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9);
 };
@@ -47,6 +59,13 @@ export const convertCurrency = (amount, from, to, exchangeRates) => {
   return (amount / rateFrom) * rateTo;
 };
 
+/**
+ * Calculates total monthly cost across all active subscriptions
+ * @param {Array} subscriptions 
+ * @param {string} baseCurrency 
+ * @param {Object} exchangeRates 
+ * @returns {number} calculated monthly cost
+ */
 export const calculateMonthlyCost = (subscriptions, baseCurrency = 'PLN', exchangeRates = {}) => {
   return subscriptions
     .filter(sub => sub.status !== 'paused')
@@ -67,6 +86,12 @@ export const calculateMonthlyCost = (subscriptions, baseCurrency = 'PLN', exchan
     }, 0);
 };
 
+/**
+ * Formats amount into currency string
+ * @param {number} amount
+ * @param {string} currency code (e.g. PLN, USD)
+ * @returns {string} formatted currency
+ */
 export const formatCurrency = (amount, currency = 'PLN') => {
   return new Intl.NumberFormat('pl-PL', {
     style: 'currency',
